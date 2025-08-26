@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeLink Health Monitor - Dashboard</title>
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🩺</text></svg>">
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Poppins", sans-serif;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --danger-gradient: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            --info-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #4facfe;
+            --warning-color: #f093fb;
+            --danger-color: #ff9a9e;
+            --info-color: #a8edea;
+            --light-color: #f8f9fa;
+            --dark-color: #2c3e50;
+            --text-color: #333;
+            --border-color: #e9ecef;
+            --shadow: 0 10px 30px rgba(102, 126, 234, 0.15);
+            --shadow-hover: 0 15px 40px rgba(102, 126, 234, 0.25);
+            --border-radius: 15px;
+            --border-radius-large: 25px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--text-color);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            25% { transform: scale(1.1); }
+            50% { transform: scale(1.05); }
+            75% { transform: scale(1.15); }
+        }
+
+        .header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            animation: slideInLeft 0.6s ease-out;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .logo span {
+            margin-left: 0.75rem;
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            animation: slideInRight 0.6s ease-out;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255,255,255,0.15);
+            border-radius: 30px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+            transition: var(--transition);
+        }
+
+        .connection-status:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-2px);
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--success-color);
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 10px rgba(79, 172, 254, 0.5);
+        }
+
+        .status-dot.disconnected {
+            background: var(--danger-color);
+            box-shadow: 0 0 10px rgba(255, 154, 158, 0.5);
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+            animation: fadeIn 0.8s ease-out 0.2s both;
+        }
+
+        .dashboard-content {
+            display: grid;
+            gap: 2rem;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            animation: slideInRight 0.8s ease-out 0.4s both;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: var(--primary-gradient);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card:hover::before {
+            left: 0;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+            position: relative;
+        }
+
+        .card-header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary-gradient);
+            transition: var(--transition);
+        }
+
+        .card:hover .card-header::after {
+            width: 100%;
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .device-selector {
+            margin-bottom: 2rem;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .device-tabs {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .device-tab {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid var(--border-color);
+            background: white;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.95rem;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .device-tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--primary-gradient);
+            transition: var(--transition);
+            z-index: -1;
+        }
+
+        .device-tab.active {
+            color: white;
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .device-tab.active::before {
+            left: 0;
+        }
+
+        .device-tab:hover:not(.active) {
+            background: var(--light-color);
+            transform: translateY(-2px);
+            border-color: var(--primary-color);
+        }
+
+        .vital-signs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .vital-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem 1.5rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border-left: 5px solid var(--primary-color);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vital-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.05) 0%, transparent 70%);
+            transition: var(--transition);
+            transform: scale(0);
+        }
+
+        .vital-card:hover::before {
+            transform: scale(1);
+        }
+
+        .vital-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .vital-card.warning {
+            border-left-color: var(--warning-color);
+        }
+
+        .vital-card.danger {
+            border-left-color: var(--danger-color);
+            animation: pulse 3s infinite;
+        }
+
+        .vital-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            transition: var(--transition);
+        }
+
+        .vital-card:hover .vital-icon {
+            transform: scale(1.2) rotate(5deg);
+        }
+
+        .vital-card[data-type="heart"] .vital-icon {
+            animation: heartbeat 2s infinite;
+        }
+
+        .vital-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .vital-label {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .vital-trend {
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            display: inline-block;
+            font-weight: 600;
+        }
+
+        .trend-up {
+            background: linear-gradient(135deg, #ff9a9e, #fecfef);
+            color: #d63031;
+        }
+
+        .trend-down {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: #00b894;
+        }
+
+        .trend-stable {
+            background: linear-gradient(135deg, #a8edea, #fed6e3);
+            color: #636e72;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, #f8f9ff, #f0f4ff);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        .chart-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        .alert-list {
+            max-height: 450px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) transparent;
+        }
+
+        .alert-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .alert-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .alert-list::-webkit-scrollbar-thumb {
+            background: var(--primary-gradient);
+            border-radius: 3px;
+        }
+
+        .alert-item {
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            border-left: 5px solid var(--info-color);
+            background: linear-gradient(135deg, #f8f9ff, #f0f4ff);
+            transition: var(--transition);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .alert-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: var(--transition);
+        }
+
+        .alert-item:hover::before {
+            animation: shimmer 0.8s ease-out;
+        }
+
+        .alert-item:hover {
+            transform: translateX(8px) scale(1.02);
+        }
+
+        .alert-item.warning {
+            border-left-color: var(--warning-color);
+            background: linear-gradient(135deg, #fff8f5, #fff0e6);
+        }
+
+        .alert-item.critical {
+            border-left-color: var(--danger-color);
+            background: linear-gradient(135deg, #fff5f5, #ffe6e6);
+            animation: pulse 4s infinite;
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            color: var(--dark-color);
+            font-size: 1.1rem;
+        }
+
+        .alert-time {
+            font-size: 0.85rem;
+            color: #666;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+        }
+
+        .alert-message {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        .device-status {
+            padding: 1rem 0;
+        }
+
+        .status-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background: linear-gradient(135deg, #f8f9ff, #f0f4ff);
+            transition: var(--transition);
+        }
+
+        .status-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        .status-label {
+            font-size: 0.95rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .status-value {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--dark-color);
+        }
+
+        .map-container {
+            height: 400px;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .map-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: var(--border-radius);
+            box-shadow: inset 0 0 20px rgba(102, 126, 234, 0.1);
+            pointer-events: none;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            position: relative;
+            overflow: hidden;
+            background: white;
+            border: 2px solid var(--border-color);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            transition: var(--transition);
+            z-index: -1;
+        }
+
+        .btn:hover::before {
+            left: 0;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            color: white;
+        }
+
+        .btn-primary {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-primary::before {
+            background: var(--primary-gradient);
+        }
+
+        .btn-success {
+            border-color: var(--success-color);
+            color: var(--success-color);
+        }
+
+        .btn-success::before {
+            background: var(--success-gradient);
+        }
+
+        .btn-warning {
+            border-color: var(--warning-color);
+            color: var(--warning-color);
+        }
+
+        .btn-warning::before {
+            background: var(--warning-gradient);
+        }
+
+        .btn-danger {
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+        }
+
+        .btn-danger::before {
+            background: var(--danger-gradient);
+        }
+
+        .time-filter {
+            display: flex;
+            gap: 0.5rem;
+            background: white;
+            padding: 0.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .time-filter button {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            border-radius: calc(var(--border-radius) - 4px);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: var(--transition);
+            color: var(--text-color);
+        }
+
+        .time-filter button.active {
+            background: var(--primary-gradient);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .time-filter button:hover:not(.active) {
+            background: var(--light-color);
+            transform: translateY(-1px);
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            font-style: italic;
+            color: #666;
+            position: relative;
+        }
+
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            margin-left: 1rem;
+            border: 2px solid var(--border-color);
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+            background: linear-gradient(135deg, #f8f9ff, #f0f4ff);
+            border-radius: var(--border-radius);
+            border: 2px dashed var(--border-color);
+        }
+
+        .emergency-alert {
+            background: var(--danger-gradient);
+            color: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+            animation: pulse 2s infinite;
+            box-shadow: var(--shadow-hover);
+            border-left: 5px solid #fff;
+        }
+
+        .offline-banner {
+            background: var(--warning-gradient);
+            color: white;
+            padding: 0.75rem;
+            text-align: center;
+            font-weight: 600;
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        /* Enhanced Charts Styling */
+        .chart-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .chart-tab {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .chart-tab.active {
+            background: var(--primary-gradient);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .chart-tab:hover:not(.active) {
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+
+        /* Statistics Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: var(--transition);
+            border-top: 4px solid var(--primary-color);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Progress Bars */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-gradient);
+            border-radius: 4px;
+            transition: width 1s ease-out;
+        }
+
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                margin: 1rem;
+                padding: 0 1rem;
+            }
+
+            .sidebar {
+                animation: fadeIn 0.8s ease-out 0.2s both;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 0.5rem;
+                padding: 0 0.5rem;
+                gap: 1.5rem;
+            }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .vital-signs {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+
+            .map-container {
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .vital-signs {
+                grid-template-columns: 1fr;
+            }
+
+            .device-tabs {
+                flex-direction: column;
+            }
+
+            .card {
+                padding: 1rem;
+            }
+
+            .vital-card {
+                padding: 1.5rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Offline Banner -->
+    <div id="offline-banner" class="offline-banner" style="display: none;">
+        🔌 Connection lost. Attempting to reconnect...
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                🩺
+                <span>LifeLink Health Monitor</span>
+            </div>
+            <div class="user-info">
+                <div class="connection-status">
+                    <div class="status-dot" id="connection-status"></div>
+                    <span id="connection-text">Connected</span>
+                </div>
+                <span id="user-name">Dashboard</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Dashboard Content -->
+        <div class="dashboard-content">
+            <!-- Emergency Alert -->
+            <div id="emergency-alert" class="emergency-alert" style="display: none;">
+                <h3>🚨 EMERGENCY ALERT</h3>
+                <p id="emergency-message"></p>
+            </div>
+
+            <!-- Device Selector -->
+            <div class="device-selector card">
+                <div class="card-header">
+                    <div class="card-title">
+                        📱 Select Device
+                    </div>
+                </div>
+                <div class="device-tabs" id="device-tabs">
+                    <!-- Device tabs will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Statistics Overview -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        📊 Health Statistics
+                    </div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="avg-heart-rate">72</div>
+                        <div class="stat-label">Avg Heart Rate</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 65%"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="avg-spo2">98</div>
+                        <div class="stat-label">Avg SpO2</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 98%"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="avg-temp">36.5</div>
+                        <div class="stat-label">Avg Temperature</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 85%"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="daily-steps">8,542</div>
+                        <div class="stat-label">Daily Steps</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 75%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vital Signs -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        💓 Vital Signs Monitor
+                    </div>
+                    <div class="time-filter">
+                        <button class="active" data-time="live">Live</button>
+                        <button data-time="1h">1H</button>
+                        <button data-time="6h">6H</button>
+                        <button data-time="24h">24H</button>
+                    </div>
+                </div>
+                <div class="vital-signs" id="vital-signs">
+                    <div class="vital-card" data-type="heart">
+                        <div class="vital-icon">💓</div>
+                        <div class="vital-value" id="heart-rate">--</div>
+                        <div class="vital-label">Heart Rate (BPM)</div>
+                        <div class="vital-trend trend-stable" id="heart-rate-trend">Stable</div>
+                    </div>
+                    <div class="vital-card">
+                        <div class="vital-icon">🫁</div>
+                        <div class="vital-value" id="spo2">--</div>
+                        <div class="vital-label">SpO2 (%)</div>
+                        <div class="vital-trend trend-stable" id="spo2-trend">Normal</div>
+                    </div>
+                    <div class="vital-card">
+                        <div class="vital-icon">🌡️</div>
+                        <div class="vital-value" id="temperature">--</div>
+                        <div class="vital-label">Temperature (°C)</div>
+                        <div class="vital-trend trend-stable" id="temperature-trend">Normal</div>
+                    </div>
+                    <div class="vital-card">
+                        <div class="vital-icon">🔋</div>
+                        <div class="vital-value" id="battery">--</div>
+                        <div class="vital-label">Battery (%)</div>
+                        <div class="vital-trend trend-down" id="battery-trend">Draining</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Health Charts -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        � Advanced Health Analytics
+                    </div>
+                    <div class="chart-tabs">
+                        <button class="chart-tab active" data-chart="vitals">Vitals</button>
+                        <button class="chart-tab" data-chart="trends">Trends</button>
+                        <button class="chart-tab" data-chart="comparison">Compare</button>
+                        <button class="chart-tab" data-chart="activity">Activity</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="health-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Activity & Sleep Analysis -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        🏃‍♂️ Activity & Sleep Analysis
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="activity-chart"></canvas>
+                    </div>
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="sleep-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location Map -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        🗺️ Location Tracking
+                    </div>
+                    <div class="controls">
+                        <button class="btn btn-primary" id="center-map">📍 Center on Device</button>
+                        <button class="btn btn-success" id="share-location">📤 Share Location</button>
+                    </div>
+                </div>
+                <div class="map-container" id="map"></div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Device Status -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        ⚡ Device Status
+                    </div>
+                </div>
+                <div class="device-status">
+                    <div class="status-grid" id="device-status">
+                        <div class="status-item">
+                            <div class="status-label">Connection</div>
+                            <div class="status-value">
+                                <span class="status-dot"></span>
+                                Online
+                            </div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-label">Battery Level</div>
+                            <div class="status-value">
+                                🔋 85%
+                                <div class="progress-bar" style="width: 60px;">
+                                    <div class="progress-fill" style="width: 85%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-label">Signal Strength</div>
+                            <div class="status-value">
+                                📶 Strong
+                            </div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-label">Last Sync</div>
+                            <div class="status-value">
+                                🔄 2 min ago
+                            </div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-label">Storage Used</div>
+                            <div class="status-value">
+                                💾 12.5 MB
+                                <div class="progress-bar" style="width: 60px;">
+                                    <div class="progress-fill" style="width: 45%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Health Summary -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        📋 Today's Summary
+                    </div>
+                </div>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <div class="status-label">Active Minutes</div>
+                        <div class="status-value">💪 145 min</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Calories Burned</div>
+                        <div class="status-value">🔥 2,340 kcal</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Sleep Quality</div>
+                        <div class="status-value">😴 Good</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Stress Level</div>
+                        <div class="status-value">😌 Low</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Alerts -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        🚨 Recent Alerts
+                    </div>
+                    <button class="btn btn-primary" id="clear-alerts">Clear All</button>
+                </div>
+                <div class="alert-list" id="alert-list">
+                    <div class="alert-item">
+                        <div class="alert-header">
+                            <div class="alert-title">Normal Reading</div>
+                            <div class="alert-time">2 min ago</div>
+                        </div>
+                        <div class="alert-message">All vital signs are within normal range. Heart rate: 72 BPM</div>
+                    </div>
+                    <div class="alert-item warning">
+                        <div class="alert-header">
+                            <div class="alert-title">Low Battery Warning</div>
+                            <div class="alert-time">15 min ago</div>
+                        </div>
+                        <div class="alert-message">Device battery is at 15%. Please charge your device soon.</div>
+                    </div>
+                    <div class="alert-item">
+                        <div class="alert-header">
+                            <div class="alert-title">Activity Goal Met</div>
+                            <div class="alert-time">1 hour ago</div>
+                        </div>
+                        <div class="alert-message">Congratulations! You've reached your daily step goal of 8,000 steps.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        🔧 Quick Actions
+                    </div>
+                </div>
+                <div class="controls" style="flex-direction: column;">
+                    <button class="btn btn-danger" id="emergency-contact">📞 Emergency Contact</button>
+                    <button class="btn btn-warning" id="export-data">💾 Export Health Data</button>
+                    <button class="btn btn-primary" id="device-settings">⚙️ Device Settings</button>
+                    <button class="btn btn-success" id="share-data">📤 Share with Doctor</button>
+                </div>
+            </div>
+
+            <!-- AI Health Insights -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        🤖 AI Health Insights
+                    </div>
+                </div>
+                <div style="padding: 1rem 0;">
+                    <div class="alert-item">
+                        <div class="alert-header">
+                            <div class="alert-title">💡 Insight</div>
+                        </div>
+                        <div class="alert-message">Your heart rate variability has improved by 15% this week. Keep up the good sleep routine!</div>
+                    </div>
+                    <div class="alert-item warning">
+                        <div class="alert-header">
+                            <div class="alert-title">⚠️ Recommendation</div>
+                        </div>
+                        <div class="alert-message">Consider increasing your daily water intake. Your temperature readings suggest mild dehydration.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dashboard JavaScript will be in a separate file
+        // This includes socket.io connections, chart initialization, map setup, etc.
+    </script>
+    <script src="dashboard.js"></script>
+</body>
+</html>

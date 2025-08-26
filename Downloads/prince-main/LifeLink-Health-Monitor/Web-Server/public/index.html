@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeLink Health Monitor - Home</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .logo {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .hero-container h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero-container p {
+            color: #666;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .feature {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .feature h3 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature p {
+            color: #666;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .status {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 2rem 0;
+        }
+
+        .status h4 {
+            color: #2e7d32;
+            margin-bottom: 0.5rem;
+        }
+
+        .status p {
+            color: #388e3c;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .educational-note {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 2rem;
+        }
+
+        .educational-note h4 {
+            color: #856404;
+            margin-bottom: 0.5rem;
+        }
+
+        .educational-note p {
+            color: #856404;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero-container {
+                padding: 2rem;
+            }
+            
+            .hero-container h1 {
+                font-size: 2rem;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero-container">
+        <div class="logo">🏥</div>
+        <h1>LifeLink Health Monitor</h1>
+        <p>Advanced IoT-based health monitoring system for real-time patient care and emergency response</p>
+        
+        <div class="status">
+            <h4>🟢 System Status: Operational</h4>
+            <p>Web server running successfully. Ready for device connections and monitoring.</p>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <h3>🩺 Real-time Monitoring</h3>
+                <p>Track heart rate, temperature, SpO2, and detect falls in real-time</p>
+            </div>
+            <div class="feature">
+                <h3>📱 Web Dashboard</h3>
+                <p>Interactive charts, live data visualization, and device management</p>
+            </div>
+            <div class="feature">
+                <h3>🚨 Emergency Alerts</h3>
+                <p>Automatic SMS notifications and emergency response system</p>
+            </div>
+            <div class="feature">
+                <h3>📍 Location Tracking</h3>
+                <p>GPS-based location monitoring for emergency situations</p>
+            </div>
+        </div>
+
+        <div class="cta-buttons">
+            <a href="/login.html" class="btn btn-primary">Login to Dashboard</a>
+            <a href="/register.html" class="btn btn-secondary">Create Account</a>
+        </div>
+
+        <div class="educational-note">
+            <h4>📚 Educational Project</h4>
+            <p>This system is developed for educational purposes as part of YCCE hackathon. It demonstrates IoT integration, real-time monitoring, and emergency response systems.</p>
+        </div>
+    </div>
+
+    <script>
+        // Check if user is already logged in
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            // Add quick access to dashboard
+            const dashboardBtn = document.createElement('a');
+            dashboardBtn.href = '/dashboard.html';
+            dashboardBtn.className = 'btn btn-primary';
+            dashboardBtn.textContent = '📊 Go to Dashboard';
+            dashboardBtn.style.marginTop = '1rem';
+            
+            const ctaButtons = document.querySelector('.cta-buttons');
+            ctaButtons.innerHTML = '';
+            ctaButtons.appendChild(dashboardBtn);
+            
+            // Update status
+            const status = document.querySelector('.status');
+            status.innerHTML = `
+                <h4>🟢 Welcome Back!</h4>
+                <p>You are logged in. Access your dashboard to monitor your devices.</p>
+            `;
+        }
+
+        // Simple system status check
+        function checkSystemStatus() {
+            fetch('/api/health')
+                .then(response => response.ok ? 'healthy' : 'error')
+                .catch(() => 'error')
+                .then(status => {
+                    if (status === 'error') {
+                        const statusDiv = document.querySelector('.status');
+                        statusDiv.innerHTML = `
+                            <h4 style="color: #d32f2f;">⚠️ Database Connection Issue</h4>
+                            <p style="color: #d32f2f;">MongoDB is not running. Please install and start MongoDB to enable full functionality.</p>
+                        `;
+                        statusDiv.style.background = '#ffebee';
+                        statusDiv.style.borderColor = '#f44336';
+                    }
+                });
+        }
+
+        // Check status on page load
+        checkSystemStatus();
+    </script>
+</body>
+</html>

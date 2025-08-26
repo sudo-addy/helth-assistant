@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login/Register - LifeLink Health Monitor</title>
+    <link rel="stylesheet" href="css/auth.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+</head>
+<body>
+<body>
+    <div class="container">
+        <!-- Login Form -->
+        <div class="form-box login">
+            <form id="loginForm">
+                <h1>LifeLink Login</h1>
+                
+                <div id="loginErrorMessage" class="error-message"></div>
+                
+                <div class="input-box">
+                    <input type="text" id="loginUsername" name="username" placeholder="Username" required>
+                    <i class='bx bxs-user'></i>
+                </div>
+                
+                <div class="input-box">
+                    <input type="password" id="loginPassword" name="password" placeholder="Password" required>
+                    <i class='bx bxs-lock-alt'></i>
+                </div>
+                
+                <div class="forgot-link">
+                    <a href="#">Forgot Password?</a>
+                </div>
+                
+                <button type="submit" id="loginBtn" class="btn">
+                    <span id="loginText">Login</span>
+                    <span id="loginSpinner" class="loading" style="display: none;"></span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Registration Form -->
+        <div class="form-box register">
+            <form id="registerForm">
+                <h1>Create Account</h1>
+                
+                <div id="registerErrorMessage" class="error-message"></div>
+                <div id="registerSuccessMessage" class="success-message"></div>
+                
+                <div class="form-row">
+                    <div class="input-box">
+                        <input type="text" id="firstName" name="firstName" placeholder="First Name" required>
+                        <i class='bx bxs-user'></i>
+                    </div>
+                    <div class="input-box">
+                        <input type="text" id="lastName" name="lastName" placeholder="Last Name" required>
+                        <i class='bx bxs-user'></i>
+                    </div>
+                </div>
+                
+                <div class="input-box">
+                    <input type="text" id="username" name="username" placeholder="Username" required minlength="3">
+                    <i class='bx bxs-user'></i>
+                </div>
+                
+                <div class="input-box">
+                    <input type="email" id="email" name="email" placeholder="Email Address" required>
+                    <i class='bx bxs-envelope'></i>
+                </div>
+                
+                <div class="form-row">
+                    <div class="input-box">
+                        <input type="tel" id="phone" name="phone" placeholder="+91 XXXXX XXXXX" required>
+                        <i class='bx bxs-phone'></i>
+                    </div>
+                    <div class="input-box">
+                        <input type="number" id="age" name="age" placeholder="Age" min="1" max="120" required>
+                        <i class='bx bxs-calendar'></i>
+                    </div>
+                </div>
+                
+                <div class="input-box">
+                    <select id="gender" name="gender" required>
+                        <option value="">Select Gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <i class='bx bxs-user-detail'></i>
+                </div>
+                
+                <div class="input-box">
+                    <input type="password" id="password" name="password" placeholder="Password" required minlength="6">
+                    <i class='bx bxs-lock-alt'></i>
+                    <div class="password-strength">
+                        <div id="passwordStrengthBar" class="password-strength-bar"></div>
+                    </div>
+                </div>
+                
+                <div class="input-box">
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm Password" required>
+                    <i class='bx bxs-lock-alt'></i>
+                </div>
+                
+                <div class="form-row">
+                    <div class="input-box">
+                        <input type="tel" id="emergencyContact" name="emergencyContact" placeholder="Emergency Contact" required>
+                        <i class='bx bxs-phone'></i>
+                    </div>
+                    <div class="input-box">
+                        <input type="text" id="emergencyContactName" name="emergencyContactName" placeholder="Emergency Contact Name" required>
+                        <i class='bx bxs-user'></i>
+                    </div>
+                </div>
+                
+                <button type="submit" id="registerBtn" class="btn">
+                    <span id="registerText">Register</span>
+                    <span id="registerSpinner" class="loading" style="display: none;"></span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Toggle Panel -->
+        <div class="toggle-box">
+            <div class="toggle-panel toggle-left">
+                <h1>Welcome to LifeLink!</h1>
+                <p>Join our health monitoring community and take control of your wellness journey.</p>
+                <button class="btn register-btn">Create Account</button>
+            </div>
+
+            <div class="toggle-panel toggle-right">
+                <h1>Welcome Back!</h1>
+                <p>Sign in to access your health dashboard and continue monitoring your vital signs.</p>
+                <button class="btn login-btn">Sign In</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle between login and register forms
+        const container = document.querySelector('.container');
+        const registerBtn = document.querySelector('.register-btn');
+        const loginBtn = document.querySelector('.login-btn');
+
+        registerBtn.addEventListener('click', () => {
+            container.classList.add('active');
+        });
+
+        loginBtn.addEventListener('click', () => {
+            container.classList.remove('active');
+        });
+
+        class Auth {
+            constructor() {
+                this.loginForm = document.getElementById('loginForm');
+                this.registerForm = document.getElementById('registerForm');
+                this.loginErrorMessage = document.getElementById('loginErrorMessage');
+                this.registerErrorMessage = document.getElementById('registerErrorMessage');
+                this.registerSuccessMessage = document.getElementById('registerSuccessMessage');
+                this.loginBtn = document.getElementById('loginBtn');
+                this.registerBtn = document.getElementById('registerBtn');
+                this.loginText = document.getElementById('loginText');
+                this.registerText = document.getElementById('registerText');
+                this.loginSpinner = document.getElementById('loginSpinner');
+                this.registerSpinner = document.getElementById('registerSpinner');
+                this.passwordStrengthBar = document.getElementById('passwordStrengthBar');
+                
+                this.init();
+            }
+
+            init() {
+                // Check if already logged in
+                const token = localStorage.getItem('authToken');
+                if (token) {
+                    this.verifyToken(token);
+                }
+
+                // Form event listeners
+                this.loginForm.addEventListener('submit', (e) => this.handleLogin(e));
+                this.registerForm.addEventListener('submit', (e) => this.handleRegister(e));
+                
+                // Password strength checker
+                document.getElementById('password').addEventListener('input', (e) => {
+                    this.checkPasswordStrength(e.target.value);
+                });
+
+                // Password confirmation checker
+                document.getElementById('confirmPassword').addEventListener('input', () => {
+                    this.checkPasswordMatch();
+                });
+
+                // Phone number formatting
+                document.getElementById('phone').addEventListener('input', (e) => {
+                    this.formatPhoneNumber(e.target);
+                });
+
+                document.getElementById('emergencyContact').addEventListener('input', (e) => {
+                    this.formatPhoneNumber(e.target);
+                });
+            }
+
+            async verifyToken(token) {
+                try {
+                    const response = await fetch('/api/auth/verify', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        window.location.href = '/dashboard.html';
+                    } else {
+                        localStorage.removeItem('authToken');
+                    }
+                } catch (error) {
+                    console.error('Token verification failed:', error);
+                    localStorage.removeItem('authToken');
+                }
+            }
+
+            async handleLogin(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('loginUsername').value.trim();
+                const password = document.getElementById('loginPassword').value;
+
+                if (!username || !password) {
+                    this.showLoginError('Please enter both username and password');
+                    return;
+                }
+
+                this.setLoginLoading(true);
+                this.hideLoginError();
+
+                try {
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username, password })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        localStorage.setItem('authToken', data.token);
+                        window.location.href = '/dashboard.html';
+                    } else {
+                        this.showLoginError(data.error?.message || 'Login failed');
+                    }
+
+                } catch (error) {
+                    console.error('Login error:', error);
+                    this.showLoginError('Network error. Please check your connection.');
+                } finally {
+                    this.setLoginLoading(false);
+                }
+            }
+
+            async handleRegister(e) {
+                e.preventDefault();
+
+                const formData = new FormData(this.registerForm);
+                const userData = Object.fromEntries(formData.entries());
+
+                if (!this.validateRegisterForm(userData)) {
+                    return;
+                }
+
+                this.setRegisterLoading(true);
+                this.hideRegisterMessages();
+
+                try {
+                    const response = await fetch('/api/auth/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username: userData.username,
+                            password: userData.password,
+                            email: userData.email,
+                            firstName: userData.firstName,
+                            lastName: userData.lastName,
+                            phone: userData.phone,
+                            age: parseInt(userData.age),
+                            gender: userData.gender,
+                            emergencyContact: {
+                                name: userData.emergencyContactName,
+                                phone: userData.emergencyContact
+                            }
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        this.showRegisterSuccess('Account created successfully! Switching to login...');
+                        this.registerForm.reset();
+                        this.passwordStrengthBar.style.width = '0%';
+                        
+                        setTimeout(() => {
+                            container.classList.remove('active');
+                            this.hideRegisterMessages();
+                        }, 2000);
+                        
+                    } else {
+                        this.showRegisterError(data.error?.message || 'Registration failed');
+                    }
+
+                } catch (error) {
+                    console.error('Registration error:', error);
+                    this.showRegisterError('Network error. Please check your connection.');
+                } finally {
+                    this.setRegisterLoading(false);
+                }
+            }
+
+            checkPasswordStrength(password) {
+                let strength = 0;
+                let strengthClass = '';
+
+                if (password.length >= 6) strength++;
+                if (password.match(/[a-z]+/)) strength++;
+                if (password.match(/[A-Z]+/)) strength++;
+                if (password.match(/[0-9]+/)) strength++;
+                if (password.match(/[!@#$%^&*(),.?":{}|<>]+/)) strength++;
+
+                const percentage = (strength / 5) * 100;
+                
+                if (strength < 2) {
+                    strengthClass = 'strength-weak';
+                } else if (strength < 3) {
+                    strengthClass = 'strength-fair';
+                } else if (strength < 4) {
+                    strengthClass = 'strength-good';
+                } else {
+                    strengthClass = 'strength-strong';
+                }
+
+                this.passwordStrengthBar.style.width = `${percentage}%`;
+                this.passwordStrengthBar.className = `password-strength-bar ${strengthClass}`;
+            }
+
+            checkPasswordMatch() {
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                const confirmInput = document.getElementById('confirmPassword');
+
+                if (confirmPassword && password !== confirmPassword) {
+                    confirmInput.style.borderColor = '#ff4757';
+                } else {
+                    confirmInput.style.borderColor = '';
+                }
+            }
+
+            formatPhoneNumber(input) {
+                let value = input.value.replace(/\D/g, '');
+                if (value.length > 10) {
+                    value = value.substring(0, 10);
+                }
+                
+                if (value.length > 0) {
+                    if (!value.startsWith('91')) {
+                        value = '91' + value.substring(0, 10);
+                    }
+                    input.value = '+' + value;
+                }
+            }
+
+            validateRegisterForm(userData) {
+                const requiredFields = ['firstName', 'lastName', 'email', 'phone', 'age', 'gender', 'username', 'password', 'confirmPassword', 'emergencyContact', 'emergencyContactName'];
+                for (const field of requiredFields) {
+                    if (!userData[field] || userData[field].trim() === '') {
+                        this.showRegisterError(`Please fill in the ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`);
+                        return false;
+                    }
+                }
+
+                if (userData.password !== userData.confirmPassword) {
+                    this.showRegisterError('Passwords do not match');
+                    return false;
+                }
+
+                if (userData.password.length < 6) {
+                    this.showRegisterError('Password must be at least 6 characters long');
+                    return false;
+                }
+
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(userData.email)) {
+                    this.showRegisterError('Please enter a valid email address');
+                    return false;
+                }
+
+                const phoneRegex = /^\+91\d{10}$/;
+                if (!phoneRegex.test(userData.phone)) {
+                    this.showRegisterError('Please enter a valid phone number');
+                    return false;
+                }
+
+                if (!phoneRegex.test(userData.emergencyContact)) {
+                    this.showRegisterError('Please enter a valid emergency contact number');
+                    return false;
+                }
+
+                const age = parseInt(userData.age);
+                if (age < 1 || age > 120) {
+                    this.showRegisterError('Please enter a valid age');
+                    return false;
+                }
+
+                return true;
+            }
+
+            setLoginLoading(loading) {
+                this.loginBtn.disabled = loading;
+                if (loading) {
+                    this.loginText.style.display = 'none';
+                    this.loginSpinner.style.display = 'inline-block';
+                } else {
+                    this.loginText.style.display = 'inline';
+                    this.loginSpinner.style.display = 'none';
+                }
+            }
+
+            setRegisterLoading(loading) {
+                this.registerBtn.disabled = loading;
+                if (loading) {
+                    this.registerText.style.display = 'none';
+                    this.registerSpinner.style.display = 'inline-block';
+                } else {
+                    this.registerText.style.display = 'inline';
+                    this.registerSpinner.style.display = 'none';
+                }
+            }
+
+            showLoginError(message) {
+                this.loginErrorMessage.textContent = message;
+                this.loginErrorMessage.style.display = 'block';
+            }
+
+            hideLoginError() {
+                this.loginErrorMessage.style.display = 'none';
+            }
+
+            showRegisterError(message) {
+                this.registerErrorMessage.textContent = message;
+                this.registerErrorMessage.style.display = 'block';
+                this.registerSuccessMessage.style.display = 'none';
+            }
+
+            showRegisterSuccess(message) {
+                this.registerSuccessMessage.textContent = message;
+                this.registerSuccessMessage.style.display = 'block';
+                this.registerErrorMessage.style.display = 'none';
+            }
+
+            hideRegisterMessages() {
+                this.registerErrorMessage.style.display = 'none';
+                this.registerSuccessMessage.style.display = 'none';
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if we should show register form based on URL hash
+            if (window.location.hash === '#register') {
+                container.classList.add('active');
+            }
+            
+            new Auth();
+        });
+    </script>
+</body>
+</html>

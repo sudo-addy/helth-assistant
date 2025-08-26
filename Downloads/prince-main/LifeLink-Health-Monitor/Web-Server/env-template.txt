@@ -1,0 +1,74 @@
+# LifeLink Health Monitor - Environment Configuration
+# Copy this file to .env and fill in your actual values
+
+# Database Configuration
+MONGODB_URI=mongodb://localhost:27017/lifelink-health
+# For MongoDB Atlas: mongodb+srv://<username>:<password>@<cluster>.mongodb.net/lifelink-health
+
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key-minimum-32-characters-long
+JWT_EXPIRES_IN=7d
+
+# Server Configuration
+NODE_ENV=development
+PORT=3000
+HOST=localhost
+
+# CORS Configuration (comma-separated for multiple origins)
+CORS_ORIGIN=http://localhost:3000,http://localhost:8080
+
+# SMS Configuration (TextLocal - Indian SMS Provider)
+SMS_PROVIDER=textlocal
+TEXTLOCAL_API_KEY=your-textlocal-api-key
+TEXTLOCAL_USERNAME=your-textlocal-username
+TEXTLOCAL_HASH=your-textlocal-hash
+SMS_SENDER=LIFELINK
+
+# Alternative SMS Configuration (Twilio - International)
+# SMS_PROVIDER=twilio
+# TWILIO_ACCOUNT_SID=your-twilio-account-sid
+# TWILIO_AUTH_TOKEN=your-twilio-auth-token
+# TWILIO_FROM_NUMBER=+1234567890
+
+# MongoDB Options (for production)
+# MONGODB_SSL=true
+# MONGODB_REPLICA_SET=your-replica-set-name
+
+# Logging Configuration
+LOG_LEVEL=debug
+LOG_FILE=./logs/app.log
+
+# Security Configuration
+BCRYPT_ROUNDS=12
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX=100
+
+# Development Settings
+# Set to true to enable detailed error messages
+DEBUG=true
+
+# Production Settings (uncomment for production)
+# NODE_ENV=production
+# DEBUG=false
+# LOG_LEVEL=info
+
+# Health Monitoring Thresholds (optional - will use defaults if not set)
+# HEART_RATE_MIN=60
+# HEART_RATE_MAX=100
+# TEMPERATURE_MIN=36.0
+# TEMPERATURE_MAX=37.5
+# SPO2_MIN=95
+# BLOOD_PRESSURE_SYSTOLIC_MAX=140
+# BLOOD_PRESSURE_DIASTOLIC_MAX=90
+
+# Emergency Alert Configuration
+# EMERGENCY_RESPONSE_TIMEOUT=300000  # 5 minutes in milliseconds
+# MAX_ALERT_ATTEMPTS=3
+
+# Device Configuration
+# MAX_DEVICES_PER_USER=5
+# DEVICE_OFFLINE_TIMEOUT=300000  # 5 minutes in milliseconds
+
+# File Upload Configuration (if implementing file uploads later)
+# MAX_FILE_SIZE=10485760  # 10MB in bytes
+# UPLOAD_DIR=./uploads
